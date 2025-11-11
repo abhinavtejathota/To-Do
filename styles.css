@@ -145,6 +145,6 @@ ul li span:hover {
 }
 
 #lock-btn {
-  width: 100px;
+  width: 50px;
   background: linear-gradient(135deg, #00224d, #5d0e41);
 }
