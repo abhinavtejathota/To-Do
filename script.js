@@ -1,4 +1,4 @@
-const topicContainer = document.getElementById("topic-container");
+const topicContainer = document.getElementById("list-container");
 const topicInput = document.getElementById("topic-input");
 const taskInput = document.getElementById("task-input");
 
