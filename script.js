@@ -14,11 +14,11 @@ function toggleLock() {
     }
     lockedTopic = topicName;
     topicInput.disabled = true;
-    lockBtn.innerText = "🔓 Unlock";
+    lockBtn.innerText = "🔓";
   } else {
     lockedTopic = null;
     topicInput.disabled = false;
-    lockBtn.innerText = "🔒 Lock";
+    lockBtn.innerText = "🔒";
   }
 }
 
