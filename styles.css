@@ -146,4 +146,8 @@ ul li span:hover {
 
 #lock-btn {
   width: 50px;
+  background: transparent;
+  border: none;
+  outline: none;
+  cursor: pointer;
 }
