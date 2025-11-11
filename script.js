@@ -1,25 +1,30 @@
-const topicContainer = document.getElementById("list-container");
 const topicInput = document.getElementById("topic-input");
-const taskInput = document.getElementById("task-input");
+const inputBox = document.getElementById("task-input");
+const listContainer = document.getElementById("list-container");
+const lockBtn = document.getElementById("lock-btn");
 
-function createTopic(topicName) {
-  let topicDiv = document.createElement("div");
-  topicDiv.classList.add("topic");
+let lockedTopic = null;
 
-  topicDiv.innerHTML = `
-    <h3>${topicName}</h3>
-    <div class="progress-container">
-      <div class="progress-bar"></div>
-    </div>
-    <ul class="task-list"></ul>
-  `;
-  topicContainer.appendChild(topicDiv);
-  saveData();
+function toggleLock() {
+  if (!lockedTopic) {
+    const topicName = topicInput.value.trim();
+    if (!topicName) {
+      alert("Enter a topic name to lock.");
+      return;
+    }
+    lockedTopic = topicName;
+    topicInput.disabled = true;
+    lockBtn.innerText = "🔓 Unlock";
+  } else {
+    lockedTopic = null;
+    topicInput.disabled = false;
+    lockBtn.innerText = "🔒 Lock";
+  }
 }
 
 function addTask() {
-  let topicName = topicInput.value.trim();
-  let taskText = taskInput.value.trim();
+  let topicName = lockedTopic || topicInput.value.trim();
+  let taskText = inputBox.value.trim();
 
   if (!topicName || !taskText) {
     alert("Enter both topic and task!");
@@ -31,24 +36,27 @@ function addTask() {
   );
 
   if (!topicDiv) {
-    createTopic(topicName);
-    topicDiv = [...document.querySelectorAll(".topic")].find(
-      (t) => t.querySelector("h3").innerText === topicName
-    );
+    topicDiv = document.createElement("div");
+    topicDiv.classList.add("topic");
+    topicDiv.innerHTML = `
+      <h3>${topicName}</h3>
+      <div class="progress-container"><div class="progress-bar"></div></div>
+      <ul class="task-list"></ul>
+    `;
+    listContainer.appendChild(topicDiv);
   }
 
   const taskList = topicDiv.querySelector(".task-list");
   let li = document.createElement("li");
-  li.innerHTML = `${taskText} <span class="close-icon">\u00d7</span>`;
+  li.innerHTML = `${taskText} <span class="close-icon">&#x2716;</span>`;
   taskList.appendChild(li);
 
-  topicInput.value = "";
-  taskInput.value = "";
+  inputBox.value = "";
   updateProgress(topicDiv);
   saveData();
 }
 
-topicContainer.addEventListener("click", (e) => {
+listContainer.addEventListener("click", (e) => {
   if (e.target.tagName === "LI") {
     e.target.classList.toggle("checked");
     updateProgress(e.target.closest(".topic"));
@@ -73,15 +81,18 @@ function updateProgress(topicDiv) {
   if (tasks.length === 0) {
     topicDiv.remove();
   }
-
   saveData();
 }
 
 function saveData() {
-  localStorage.setItem("topics", topicContainer.innerHTML);
+  localStorage.setItem("topicData", listContainer.innerHTML);
 }
 
 function getData() {
-  topicContainer.innerHTML = localStorage.getItem("topics") || "";
+  listContainer.innerHTML = localStorage.getItem("topicData") || "";
 }
 getData();
+
+inputBox.addEventListener("keypress", function (e) {
+  if (e.key === "Enter") addTask();
+});
