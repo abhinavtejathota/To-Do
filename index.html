@@ -1,28 +1,219 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
-    <meta name="viewport" content="width = device-width, initial-scale=1" />
-    <title>To-Do List Application</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="FlowTask - smart to-do lists with paper scan, priorities, due dates, and more." />
+    <meta name="theme-color" content="#ff204e" />
+    <title>FlowTask — Smart To-Do</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <div class="container">
-      <div class="todo-app">
-        <h2>To-Do List <img src="images/icon3.png" alt="list" /></h2>
-
-        <div class="row topic-row">
-          <input type="text" id="topic-input" placeholder="Enter topic" />
-          <button id="lock-btn" onclick="toggleLock()">🔒</button>
+    <div class="app-shell">
+      <!-- Global header -->
+      <header class="top-bar">
+        <button class="icon-btn" id="sidebar-toggle" aria-label="Toggle sidebar" aria-expanded="true">☰</button>
+        <a class="brand" href="#" aria-label="FlowTask home">
+          <img src="images/icon3.png" alt="" width="28" height="28" />
+          <span>FlowTask</span>
+        </a>
+        <div class="top-bar-actions">
+          <button class="btn btn-ghost btn-sm" id="global-scan-btn" title="Scan paper list">
+            <span class="btn-icon" aria-hidden="true">📷</span>
+            <span class="btn-label">Scan list</span>
+          </button>
+          <button class="icon-btn" id="settings-btn" title="Settings" aria-label="Settings">⚙</button>
         </div>
+      </header>
 
-        <div class="row">
-          <input type="text" id="task-input" placeholder="Add your task" />
-          <button onclick="addTask()">Add</button>
-        </div>
+      <div class="app-layout">
+        <!-- Left: list navigation -->
+        <aside class="sidebar" aria-label="Task lists">
+          <div class="sidebar-body">
+            <div class="sidebar-header">
+              <h2>My Lists</h2>
+            </div>
+            <div id="sidebar-stats" class="sidebar-stats"></div>
+            <nav id="list-sidebar" class="list-nav" aria-label="All lists"></nav>
+          </div>
+          <div class="sidebar-footer">
+            <button class="btn btn-primary sidebar-add-btn" id="add-list-btn">
+              <span aria-hidden="true">+</span> New list
+            </button>
+          </div>
+        </aside>
 
-        <div id="list-container"></div>
+        <!-- Right: active list workspace -->
+        <main class="main-panel">
+          <div class="main-content">
+            <header id="list-header" class="list-header"></header>
+            <div id="list-toolbar" class="list-toolbar"></div>
+            <section id="task-list" class="task-list" aria-label="Tasks"></section>
+          </div>
+          <footer id="task-footer" class="task-footer"></footer>
+        </main>
       </div>
     </div>
-    <script src="script.js"></script>
+
+    <!-- New / edit list -->
+    <div class="modal" id="list-form-modal" role="dialog" aria-labelledby="list-form-title">
+      <div class="modal-backdrop" data-close-modal="list-form-modal"></div>
+      <div class="modal-panel modal-sm">
+        <header class="modal-header">
+          <h2 id="list-form-title">New list</h2>
+          <button type="button" class="icon-btn" data-close-modal="list-form-modal" aria-label="Close">×</button>
+        </header>
+        <form id="list-form" class="modal-body form-grid">
+          <label>List name
+            <input type="text" id="list-form-name" name="name" required autocomplete="off" placeholder="e.g. Work, Groceries" />
+          </label>
+          <label>List color
+            <input type="color" id="list-form-color" name="color" value="#ff204e" />
+          </label>
+        </form>
+        <footer class="modal-footer">
+          <button type="button" class="btn btn-ghost" data-close-modal="list-form-modal">Cancel</button>
+          <button type="submit" form="list-form" class="btn btn-primary" id="list-form-submit">Create list</button>
+        </footer>
+      </div>
+    </div>
+
+    <!-- List options -->
+    <div class="modal" id="list-options-modal" role="dialog" aria-labelledby="list-options-title">
+      <div class="modal-backdrop" data-close-modal="list-options-modal"></div>
+      <div class="modal-panel modal-sm">
+        <header class="modal-header">
+          <h2 id="list-options-title">List options</h2>
+          <button type="button" class="icon-btn" data-close-modal="list-options-modal" aria-label="Close">×</button>
+        </header>
+        <form id="list-options-form" class="modal-body form-grid">
+          <label>List name
+            <input type="text" id="list-options-name" name="name" required autocomplete="off" />
+          </label>
+          <label>List color
+            <input type="color" id="list-options-color" name="color" />
+          </label>
+          <div class="list-options-danger">
+            <p class="form-hint">Deleting a list removes all tasks in it permanently.</p>
+            <button type="button" class="btn btn-danger btn-block" id="list-options-delete-btn">Delete this list</button>
+          </div>
+        </form>
+        <footer class="modal-footer">
+          <button type="button" class="btn btn-ghost" data-close-modal="list-options-modal">Cancel</button>
+          <button type="submit" form="list-options-form" class="btn btn-primary">Save changes</button>
+        </footer>
+      </div>
+    </div>
+
+    <!-- Scan modal -->
+    <div class="modal" id="scan-modal" role="dialog" aria-labelledby="scan-title">
+      <div class="modal-backdrop" data-close-modal="scan-modal"></div>
+      <div class="modal-panel modal-lg">
+        <header class="modal-header">
+          <h2 id="scan-title">Scan paper list</h2>
+          <button type="button" class="icon-btn" data-close-modal="scan-modal" aria-label="Close">×</button>
+        </header>
+        <div class="modal-body">
+          <p class="modal-hint">Take a photo or upload an image of your handwritten or printed list. We'll detect items automatically — then you can edit before adding.</p>
+          <div class="scan-actions">
+            <button type="button" class="btn btn-primary" id="scan-camera-btn">📷 Use camera</button>
+            <button type="button" class="btn btn-ghost" id="scan-upload-btn">🖼 Upload image</button>
+            <input type="file" id="scan-camera-input" accept="image/*" capture="environment" hidden />
+            <input type="file" id="scan-file-input" accept="image/*" hidden />
+          </div>
+          <div id="scan-progress" class="scan-progress" hidden>
+            <div class="progress-track"><div class="progress-bar-inner progress-fill"></div></div>
+            <p class="progress-label">Scanning…</p>
+          </div>
+          <div class="scan-results">
+            <div class="scan-section">
+              <div class="section-head">
+                <h3>Detected items</h3>
+                <button type="button" class="btn btn-ghost btn-sm" id="scan-add-one-btn">+ Add item</button>
+              </div>
+              <div id="scan-preview-list" class="scan-preview-list"></div>
+            </div>
+            <details class="scan-raw">
+              <summary>Raw OCR text (edit &amp; re-parse)</summary>
+              <pre id="scan-raw-text" contenteditable="true"></pre>
+              <button type="button" class="btn btn-ghost btn-sm" id="scan-reparse-btn">Re-parse text</button>
+            </details>
+          </div>
+        </div>
+        <footer class="modal-footer">
+          <button type="button" class="btn btn-ghost" data-close-modal="scan-modal">Cancel</button>
+          <button type="button" class="btn btn-primary" id="scan-add-btn">Add to list</button>
+        </footer>
+      </div>
+    </div>
+
+    <!-- Task edit modal -->
+    <div class="modal" id="task-modal" role="dialog" aria-labelledby="task-edit-title">
+      <div class="modal-backdrop" data-close-modal="task-modal"></div>
+      <div class="modal-panel">
+        <header class="modal-header">
+          <h2 id="task-edit-title">Edit task</h2>
+          <button type="button" class="icon-btn" data-close-modal="task-modal" aria-label="Close">×</button>
+        </header>
+        <form id="task-edit-form" class="modal-body form-grid">
+          <label>Task <input name="text" required autocomplete="off" /></label>
+          <label>Priority
+            <select name="priority">
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+            </select>
+          </label>
+          <label>Due date <input type="date" name="dueDate" /></label>
+          <label>Tags <input name="tags" placeholder="work, errands, home" autocomplete="off" /></label>
+          <label class="full-width">Notes <textarea name="notes" rows="3"></textarea></label>
+          <footer class="modal-footer full-width">
+            <button type="button" class="btn btn-ghost" data-close-modal="task-modal">Cancel</button>
+            <button type="submit" class="btn btn-primary">Save</button>
+          </footer>
+        </form>
+      </div>
+    </div>
+
+    <!-- Settings modal -->
+    <div class="modal" id="settings-modal" role="dialog" aria-labelledby="settings-title">
+      <div class="modal-backdrop" data-close-modal="settings-modal"></div>
+      <div class="modal-panel">
+        <header class="modal-header">
+          <h2 id="settings-title">Settings</h2>
+          <button type="button" class="icon-btn" data-close-modal="settings-modal" aria-label="Close">×</button>
+        </header>
+        <form id="settings-form" class="modal-body form-grid"></form>
+        <footer class="modal-footer">
+          <button type="button" class="btn btn-ghost" data-close-modal="settings-modal">Cancel</button>
+          <button type="submit" form="settings-form" class="btn btn-primary">Save</button>
+        </footer>
+      </div>
+    </div>
+
+    <!-- Confirm dialog (always last — stacks above other modals) -->
+    <div class="modal modal-alert" id="confirm-modal" role="alertdialog" aria-modal="true" aria-labelledby="confirm-title" aria-describedby="confirm-message">
+      <div class="modal-backdrop" data-close-modal="confirm-modal"></div>
+      <div class="modal-panel modal-sm">
+        <header class="modal-header">
+          <h2 id="confirm-title">Confirm</h2>
+        </header>
+        <div class="modal-body">
+          <p id="confirm-message" class="confirm-message"></p>
+        </div>
+        <footer class="modal-footer">
+          <button type="button" class="btn btn-ghost" id="confirm-cancel-btn">Cancel</button>
+          <button type="button" class="btn btn-primary" id="confirm-action-btn">Confirm</button>
+        </footer>
+      </div>
+    </div>
+
+    <div id="toast-container" aria-live="polite"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <script type="module" src="js/app.js"></script>
   </body>
 </html>
