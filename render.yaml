@@ -1,0 +1,21 @@
+# Render Blueprint — https://render.com/docs/blueprint-spec
+# Static site (no build step). Connect this repo in the Render Dashboard.
+
+services:
+  - type: web
+    name: flowtask
+    runtime: static
+    staticPublishPath: .
+    headers:
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: X-Frame-Options
+        value: SAMEORIGIN
+      - path: /js/*
+        name: Cache-Control
+        value: public, max-age=3600, must-revalidate
+      - path: /images/*
+        name: Cache-Control
+        value: public, max-age=86400
